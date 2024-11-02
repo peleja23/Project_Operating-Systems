@@ -1,5 +1,5 @@
 typedef struct Info_region {
-int region_nr;
+int total_region;
 int registos;
 } Info_region;
 

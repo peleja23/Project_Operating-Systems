@@ -11,4 +11,5 @@ int main(int argc, char *argv[]){
     region = atoi(argv[2]);
     sorter(argv[1], region);
 
+    return 0;
 }
