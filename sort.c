@@ -4,8 +4,7 @@
 #include <sys/wait.h>
 #include "my_sort.h"
 
-
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
     
     int region;
     region = atoi(argv[2]);

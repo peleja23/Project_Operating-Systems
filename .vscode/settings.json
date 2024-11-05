@@ -4,6 +4,7 @@
         "wait.h": "c",
         "unistd.h": "c",
         "stdlib.h": "c",
-        "my_sort.h": "c"
+        "my_sort.h": "c",
+        "fcntl.h": "c"
     }
 }
