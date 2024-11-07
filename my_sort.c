@@ -1,120 +1,78 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h> 
+#include <fcntl.h>
 #include "my_sort.h"
-/**
-*
-* @author José Peleja
-* @author Nuno Silva
-* @author Rui Dias
-*
-*/
+
 Info_region Info;
 
-// Function to order each part of the array(partition) in the quicksort algorithm
-int partition(int *array, int low, int high) {
-    // Choose the pivot as the last element of the current section of the array
-    int pivot = array[high];
+// Function to read an integer from a specific position in the file
+int read_int(int fd, int position) {
+    int value;
+    lseek(fd, position * sizeof(int), SEEK_SET);
+    read(fd, &value, sizeof(int));
+    return value;
+}
+
+// Function to write an integer to a specific position in the file
+void write_int(int fd, int position, int value) {
+    lseek(fd, position * sizeof(int), SEEK_SET);
+    write(fd, &value, sizeof(int));
+}
+
+// Partition function for the quicksort algorithm using file-based access
+int partition(int fd, int low, int high) {
+    int pivot = read_int(fd, high);
     int i = low - 1;
 
-    // Loop through each element from the start of the partition up to the element before the pivot
     for (int j = low; j < high; j++) {
-        if (array[j] <= pivot) {
+        int current = read_int(fd, j);
+        if (current <= pivot) {
             i++;
-            // Swap elements at i and j to place the smaller element on the left
-            int temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
+            // Swap values at i and j
+            int temp_i = read_int(fd, i);
+            write_int(fd, i, current);
+            write_int(fd, j, temp_i);
         }
     }
-    // Place the pivot in its correct position by swapping it with the element at "i + 1"
-    // Now, all elements to the left of the pivot are smaller, and those to the right are larger
-    int temp = array[i + 1];
-    array[i + 1] = array[high];
-    array[high] = temp;
+
+    // Place the pivot in its correct position
+    int temp = read_int(fd, i + 1);
+    write_int(fd, i + 1, pivot);
+    write_int(fd, high, temp);
 
     return i + 1;
 }
 
-// Recursive quicksort function to sort the array
-// Divides the array into partitions and sorts them around a pivot element
-void quickSort(int *array, int low, int high) {
+// Recursive quicksort function for sorting the file directly
+void quickSort(int fd, int low, int high) {
     if (low < high) {
-        int pi = partition(array, low, high);
+        int pi = partition(fd, low, high);
 
-        // Recursively apply quicksort to the left subarray (elements below the pivot)
-        quickSort(array, low, pi - 1);
-        // Recursively apply quicksort to the right subarray (elements above the pivot)
-        quickSort(array, pi + 1, high);
+        // Recursively apply quicksort to left and right subarrays
+        quickSort(fd, low, pi - 1);
+        quickSort(fd, pi + 1, high);
     }
 }
-void read_block(int fd, int offset, int *block, int blockSize) {
 
-    lseek(fd, offset, SEEK_SET);
-    read(fd, block, blockSize * sizeof(int));
-
-}
-
-void write_block(int fd, int offset, int *block, int blockSize) {
-
-    lseek(fd, offset, SEEK_SET);
-    printf("next block\n");
-    for(int i = 0; i<blockSize ; i++){
-        printf("temp:%d\n",block[i]);
-    }
-    write(fd, block, blockSize * sizeof(int));
-}
-
-// Recursive function responsible for dividing in blocks and sorting all 
-int *mySort(int fd, int blockSize, int region) {
-    int end_1;
-    int start2;
-    int *block = (int *)malloc(blockSize * sizeof(int));
-
-    int offSet = ((region - 1) * Info.registos * sizeof(int)) + (2 * sizeof(int));
-    read_block(fd, offSet, block, blockSize);
-    quickSort(block, 0, blockSize - 1);
-    end_1 = block[blockSize - 1];
-    write_block(fd, offSet, block, blockSize);
-
-    offSet = ((region - 1) * Info.registos * sizeof(int)) + (2 * sizeof(int)) + (blockSize * sizeof(int));
-    read_block(fd, offSet, block, blockSize);
-    quickSort(block, 0, blockSize - 1);
-    start2 = block[0];
-    write_block(fd, offSet, block, blockSize);
-
-    if(end_1 > start2){
-
-        offSet = ((region - 1) * Info.registos * sizeof(int)) + (2 * sizeof(int)) + ((blockSize / 2) * sizeof(int));
-        read_block(fd, offSet, block, blockSize);
-        quickSort(block, 0, blockSize - 1);
-        write_block(fd, offSet, block, blockSize);
-
-        mySort(fd, blockSize, region);
-    }
-    free(block);
-    return 0;  
-}
-
+// Main function to sort the specified region in the file
 int sorter(char *path, int region) {
     int fd;
-    int blockSize;
-    
-    fd = open(path, O_RDWR, 0666);
 
-    //Check if the file failed to open
+    // Open file in read-write mode
+    fd = open(path, O_RDWR, 0666);
     if (fd < 0) {
         perror("Failed to open file");
         return -1;
     }
-
     read(fd, &Info, sizeof(Info_region));
-    blockSize = Info.registos / 2; 
-    mySort(fd, blockSize, region);
-    
-    close(fd);
+    int records_per_region = Info.registos;
 
+    // Get the start and end positions for the region's records
+    int start_position = 2 + (region - 1) * records_per_region;
+    int end_position = start_position + records_per_region - 1;
+    quickSort(fd, start_position, end_position);
+
+    close(fd);
     return 0;
 }
