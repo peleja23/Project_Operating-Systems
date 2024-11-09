@@ -1,6 +1,8 @@
 CC = gcc
 CFLAGS = -Wall -g
 
+all: sort stats
+
 sort: my_sort.o sort.o
 stats: my_stats.o stats.o
 

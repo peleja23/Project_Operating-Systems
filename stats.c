@@ -5,8 +5,9 @@
 #include "my_stats.h"
 
 int main(int argc, char *argv[]) {
-    
-    stats(argv[1], argv[2]);
+
+    exec_sort(argv[1], argv[2]);
+    get_stats(argv[1], argv[2]);
 
     return 0;
 }

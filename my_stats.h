@@ -6,4 +6,5 @@ int max;
 int min;
 } region_stats;
 
-int stats(char *path, int region);
+int exec_sort(char *path, char *region_nr);
+int get_stats(char *path, char *region_nr);
