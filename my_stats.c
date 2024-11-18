@@ -4,14 +4,14 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include "my_stats.h"
-#include "my_sort.h"
+#include "def_struct.h"
 
 Info_region Info;
 region_stats reg_stats;
 
 int exec_sort(char *path, char *region_nr){
     int status;
-    if(fork() ==0){
+    if(fork() == 0){
         execlp("./sort", "./sort", path, region_nr, NULL);
         perror("execlp");
         _exit(1);    
@@ -82,6 +82,7 @@ int get_stats(char *path, char *region_nr){
         }
         average = average + value;
     }
+    
     reg_stats.average = (float)(average / Info.registos);
     lseek(fd, mid_position, SEEK_SET);
     if((Info.registos % 2) == 0){
@@ -94,7 +95,7 @@ int get_stats(char *path, char *region_nr){
         read(fd, &value, sizeof(int));
         reg_stats.median = value;
     }
-    write_in_file();
+
     return 0;
 }
 

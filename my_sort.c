@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "my_sort.h"
+#include "def_struct.h"
 
 Info_region Info;
 
@@ -56,16 +57,7 @@ void quickSort(int fd, int low, int high) {
 }
 
 // Main function to sort the specified region in the file
-int sorter(char *path, int region) {
-    int fd;
-
-    // Open file in read-write mode
-    fd = open(path, O_RDWR, 0666);
-    if (fd < 0) {
-        perror("Failed to open file");
-        return -1;
-    }
-    read(fd, &Info, sizeof(Info_region));
+int sorter (int fd, int region) {
     int records_per_region = Info.registos;
 
     // Get the start and end positions for the region's records
@@ -75,4 +67,18 @@ int sorter(char *path, int region) {
 
     close(fd);
     return 0;
+}
+
+int read_info (char *path) {
+    int fd;
+
+    // Open file in read-write mode
+    fd = open(path, O_RDWR, 0666);
+    if (fd < 0) {
+        perror("Failed to open file");
+        return -1;
+    }
+    read(fd, &Info, sizeof(Info_region));
+
+    return fd;
 }
