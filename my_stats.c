@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
 #include "my_stats.h"
 #include "def_struct.h"
 
@@ -17,7 +12,7 @@ int exec_sort(char *path, char *region_nr){
         _exit(1);    
     }
     wait(&status);
-    if(WIFEXITED(status)){
+    if(WIFEXITED(status) && WEXITSTATUS(status) != 1){
         return 0;
     }
     return 1;
