@@ -6,6 +6,7 @@
         "stdlib.h": "c",
         "my_sort.h": "c",
         "fcntl.h": "c",
-        "my_stats.h": "c"
+        "my_stats.h": "c",
+        "my_report.h": "c"
     }
 }
