@@ -64,23 +64,23 @@ int get_stats(char *path, char *region_nr){
     }
     read(fd, &Info, sizeof(Info_region));
 
-    int min_position = (2 + (reg_stats.region_id - 1) * Info.registos) * sizeof(int);
-    int mid_position = min_position + (((Info.registos/2) - 1) * sizeof(int)); 
+    int min_position = (2 + (reg_stats.region_id - 1) * Info.records) * sizeof(int);
+    int mid_position = min_position + (((Info.records/2) - 1) * sizeof(int)); 
 
     lseek(fd, min_position, SEEK_SET);
-    for(int i = 0; i<Info.registos; i++){
+    for(int i = 0; i<Info.records; i++){
         read(fd, &value, sizeof(int));
         if( i == 0 ){
             reg_stats.min = value;
-        }else if( i == (Info.registos - 1)){
+        }else if( i == (Info.records - 1)){
             reg_stats.max = value;
         }
         average = average + value;
     }
+    reg_stats.average = (float)(average / Info.records);
     
-    reg_stats.average = (float)(average / Info.registos);
     lseek(fd, mid_position, SEEK_SET);
-    if((Info.registos % 2) == 0){
+    if((Info.records % 2) == 0){
         int value1;
         read(fd, &value, sizeof(int));
         read(fd, &value1, sizeof(int));

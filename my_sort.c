@@ -19,6 +19,7 @@ void write_int(int fd, int position, int value) {
 
 // Partition function for the quicksort algorithm using file-based access
 int partition(int fd, int low, int high) {
+    // Reads the pivot
     int pivot = read_int(fd, high);
     int i = low - 1;
 
@@ -41,12 +42,12 @@ int partition(int fd, int low, int high) {
     return i + 1;
 }
 
-// Recursive quicksort function for sorting the file directly
+// Recursive quicksort function for sorting the file
 void quickSort(int fd, int low, int high) {
     if (low < high) {
         int pi = partition(fd, low, high);
 
-        // Recursively apply quicksort to left and right subarrays
+        // Recursively apply quicksort the left and right subarrays
         quickSort(fd, low, pi - 1);
         quickSort(fd, pi + 1, high);
     }
@@ -54,7 +55,7 @@ void quickSort(int fd, int low, int high) {
 
 // Main function to sort the specified region in the file
 int sorter (int fd, int region) {
-    int records_per_region = Info.registos;
+    int records_per_region = Info.records;
 
     // Get the start and end positions for the region's records
     int start_position = 2 + (region - 1) * records_per_region;
@@ -65,6 +66,8 @@ int sorter (int fd, int region) {
     return 0;
 }
 
+// Function to read the header in the file
+// Returns the file descriptor to be used in the sorter function
 int read_info (char *path) {
     int fd;
 
