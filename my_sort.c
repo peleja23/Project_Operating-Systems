@@ -19,7 +19,7 @@ void write_int(int fd, int position, int value) {
 
 // Partition function for the quicksort algorithm using file-based access
 int partition(int fd, int low, int high) {
-    // Read the pivot
+    // Reads the pivot
     int pivot = read_int(fd, high);
     int i = low - 1;
 
