@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <string.h>
 
 int exec_sort(char *path, char *region_nr);
 int get_stats(char *path, char *region_nr);
