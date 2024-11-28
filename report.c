@@ -9,8 +9,7 @@ int main(int argc, char *argv[]) {
         read_stats(nr_region);
     }
     if(strcmp("-d",argv[3]) == 0){
-        exec_stats(nr_region, argv[2]);
-        read_stats(nr_region);
+        exec_stats_stdin(nr_region, argv[2]);
     }    
     return 0;
 }

@@ -50,6 +50,13 @@ int write_in_file(){
     return 0;
 }
 
+int write_in_stdout(){
+
+    write(1, &reg_stats, sizeof(region_stats));
+    return 0;
+    
+}
+
 int get_stats(char *path, char *region_nr){
     int fd;
     int value;

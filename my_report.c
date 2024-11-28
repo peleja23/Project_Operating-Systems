@@ -27,7 +27,7 @@ int exec_stats(int nr_region, char* path){
     for(int i = 0; i < nr_region; i++){
         if(fork() == 0) {
             snprintf(value, sizeof(value), "%d", i+1);
-            execlp("./stats", "./stats", path, value, NULL);
+            execlp("./stats", "./stats", path, value, "-f", NULL);
             perror("execlp");
             _exit(1);
         }
@@ -109,5 +109,38 @@ int read_stats(int nr_region){
     close(pd[0]);
     compare_stats(all_regs, nr_region);
 
+    return 0;
+}
+
+int exec_stats_stdin(int nr_region, char* path){
+    int status;
+    char value[4];
+    int pd[2];
+    pipe(pd);
+    struct region_stats all_regs[nr_region];
+
+    for(int i = 0; i < nr_region; i++){
+        if(fork() == 0) {
+            close(pd[0]);
+            dup2(pd[1],1);
+            close(pd[1]);
+            snprintf(value, sizeof(value), "%d", i+1);
+            execlp("./stats", "./stats", path, value, "-d", NULL);
+            perror("execlp");
+            _exit(1);
+        }
+    }
+    close(pd[1]);
+    for(int i = 0; i < nr_region; i++){
+        int bytes_read = read(pd[0], &all_regs[i], sizeof(region_stats));
+        wait(&status);
+        if(WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            printf("stats worked with return value:%d\n", WEXITSTATUS(status));
+        }else{
+            return 1;
+        }
+    }
+    close(pd[0]);
+    compare_stats(all_regs, nr_region);
     return 0;
 }
