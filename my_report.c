@@ -132,7 +132,7 @@ int exec_stats_stdin(int nr_region, char* path){
     }
     close(pd[1]);
     for(int i = 0; i < nr_region; i++){
-        int bytes_read = read(pd[0], &all_regs[i], sizeof(region_stats));
+        read(pd[0], &all_regs[i], sizeof(region_stats));
         wait(&status);
         if(WIFEXITED(status) && WEXITSTATUS(status) == 0) {
             printf("stats worked with return value:%d\n", WEXITSTATUS(status));
