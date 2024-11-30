@@ -61,7 +61,8 @@ int get_stats(char *path, char *region_nr){
     int fd;
     int value;
     float average;
-    int buf[256];
+    int BUF_SIZE = 256;
+    int buf[BUF_SIZE];
     int values_read = 0;
     int bytes_read = 0;
     int to_read = 0;
@@ -82,10 +83,10 @@ int get_stats(char *path, char *region_nr){
     lseek(fd, min_position, SEEK_SET);
     while(values_read < Info.records){
         to_read =  Info.records - values_read;
-        if (to_read > sizeof(buf)){
-            to_read = sizeof(buf);
+        if (to_read > BUF_SIZE){
+            to_read = BUF_SIZE;
         }
-        bytes_read = read (fd, &buf, sizeof(to_read));
+        bytes_read = read (fd, &buf, to_read * sizeof(int));
         values_read = values_read + (bytes_read/sizeof(int));
         for(int i = 0; i<to_read; i++){
             value = buf[i];
@@ -95,19 +96,9 @@ int get_stats(char *path, char *region_nr){
                 reg_stats.max = value;
             }
             average = average + value;
-            printf("counter: %d\n",counter);
             counter ++;
         }
     }
-    /*for(int i = 0; i<Info.records; i++){
-        read(fd, &value, sizeof(int));
-        if( i == 0 ){
-            reg_stats.min = value;
-        }else if( i == (Info.records - 1)){
-            reg_stats.max = value;
-        }
-        average = average + value;
-    }*/
 
     reg_stats.average = (float)(average / Info.records);
     
