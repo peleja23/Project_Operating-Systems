@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h> 
+#include <stdbool.h>
 #include "my_sort.h"
 
 Info_region Info;
@@ -54,47 +55,62 @@ void read_block(int fd, int offset, int *block, int blockSize) {
 void write_block(int fd, int offset, int *block, int blockSize) {
 
     lseek(fd, offset, SEEK_SET);
-    printf("next block\n");
-    for(int i = 0; i<blockSize ; i++){
-        printf("temp:%d\n",block[i]);
-    }
     write(fd, block, blockSize * sizeof(int));
 }
 
 // Recursive function responsible for dividing in blocks and sorting all 
-int *mySort(int fd, int blockSize, int region) {
-    int end_1;
-    int start2;
-    int *block = (int *)malloc(blockSize * sizeof(int));
+int *mySort(int fd, int region) {
+    int values_read = 0;
+    int blockSize = 256;
+    int buf[blockSize];
+    int nr_block = 0;
+    int offSet;
+    nr_block = (Info.records + blockSize - 1) / blockSize;
+    int matrix[nr_block][2];
+    bool ordered = true;
 
-    int offSet = ((region - 1) * Info.registos * sizeof(int)) + (2 * sizeof(int));
-    read_block(fd, offSet, block, blockSize);
-    quickSort(block, 0, blockSize - 1);
-    end_1 = block[blockSize - 1];
-    write_block(fd, offSet, block, blockSize);
-
-    offSet = ((region - 1) * Info.registos * sizeof(int)) + (2 * sizeof(int)) + (blockSize * sizeof(int));
-    read_block(fd, offSet, block, blockSize);
-    quickSort(block, 0, blockSize - 1);
-    start2 = block[0];
-    write_block(fd, offSet, block, blockSize);
-
-    if(end_1 > start2){
-
-        offSet = ((region - 1) * Info.registos * sizeof(int)) + (2 * sizeof(int)) + ((blockSize / 2) * sizeof(int));
-        read_block(fd, offSet, block, blockSize);
-        quickSort(block, 0, blockSize - 1);
-        write_block(fd, offSet, block, blockSize);
-
-        mySort(fd, blockSize, region);
+    for(int i = 0; i < nr_block; i++){
+        offSet = (2 * sizeof(int)) + ((region - 1) * Info.records * sizeof(int)) + (i * blockSize * sizeof(int));
+        values_read = values_read + blockSize;
+        if(values_read > Info.records){
+            blockSize = blockSize - (values_read - Info.records);
+        }
+        read_block(fd, offSet, buf, blockSize);
+        quickSort(buf, 0, blockSize - 1);
+        matrix[i][0] = buf[0];
+        matrix[i][1] = buf[blockSize - 1];
+        write_block(fd, offSet, buf, blockSize);
     }
-    free(block);
+    for(int i = 0; i < (nr_block -1); i++){
+        if(matrix[i][1] > matrix[i+1][0]){
+            printf("ultimo do primeiro%d ,primeiro do seguinte%d\n",matrix[i][1], matrix[i+1][0]);
+            ordered = false;
+           
+        }
+    } 
+    printf("%d\n", ordered);
+    values_read = 0;
+    blockSize = 256;
+    if(ordered == false){
+        for(int i = 0; i < nr_block - 1; i++){
+            offSet = ((region - 1) * Info.records * sizeof(int)) + (2 * sizeof(int) + (i * blockSize * sizeof(int)) + ((blockSize / 2) * sizeof(int)));
+            values_read = values_read + blockSize;
+            if(values_read > Info.records){
+                blockSize = Info.records - values_read;
+            } 
+            read_block(fd, offSet, buf, blockSize);
+            quickSort(buf, 0, blockSize - 1);
+            write_block(fd, offSet, buf, blockSize);
+            
+        }
+
+        mySort(fd, region);
+    }
     return 0;  
 }
 
 int sorter(char *path, int region) {
     int fd;
-    int blockSize;
     
     fd = open(path, O_RDWR, 0666);
 
@@ -105,8 +121,7 @@ int sorter(char *path, int region) {
     }
 
     read(fd, &Info, sizeof(Info_region));
-    blockSize = Info.registos / 2; 
-    mySort(fd, blockSize, region);
+    mySort(fd, region);
     
     close(fd);
 
