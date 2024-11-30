@@ -61,8 +61,13 @@ int get_stats(char *path, char *region_nr){
     int fd;
     int value;
     float average;
+    int buf[256];
+    int values_read = 0;
+    int bytes_read = 0;
+    int to_read = 0;
+    int counter = 0;
 
-    reg_stats.region_id = atoi(region_nr);;
+    reg_stats.region_id = atoi(region_nr);
     // Open file in read-write mode
     fd = open(path, O_RDONLY, 0666);
     if (fd < 0) {
@@ -73,9 +78,28 @@ int get_stats(char *path, char *region_nr){
 
     int min_position = (2 + (reg_stats.region_id - 1) * Info.records) * sizeof(int);
     int mid_position = min_position + (((Info.records/2) - 1) * sizeof(int)); 
-
+    
     lseek(fd, min_position, SEEK_SET);
-    for(int i = 0; i<Info.records; i++){
+    while(values_read < Info.records){
+        to_read =  Info.records - values_read;
+        if (to_read > sizeof(buf)){
+            to_read = sizeof(buf);
+        }
+        bytes_read = read (fd, &buf, sizeof(to_read));
+        values_read = values_read + (bytes_read/sizeof(int));
+        for(int i = 0; i<to_read; i++){
+            value = buf[i];
+            if( counter == 0 ){
+                reg_stats.min = value;
+            }else if( counter == Info.records - 1){
+                reg_stats.max = value;
+            }
+            average = average + value;
+            printf("counter: %d\n",counter);
+            counter ++;
+        }
+    }
+    /*for(int i = 0; i<Info.records; i++){
         read(fd, &value, sizeof(int));
         if( i == 0 ){
             reg_stats.min = value;
@@ -83,7 +107,8 @@ int get_stats(char *path, char *region_nr){
             reg_stats.max = value;
         }
         average = average + value;
-    }
+    }*/
+
     reg_stats.average = (float)(average / Info.records);
     
     lseek(fd, mid_position, SEEK_SET);
