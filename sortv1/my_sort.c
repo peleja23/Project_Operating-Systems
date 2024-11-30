@@ -4,13 +4,7 @@
 #include <sys/wait.h>
 #include <fcntl.h> 
 #include "my_sort.h"
-/**
-*
-* @author José Peleja
-* @author Nuno Silva
-* @author Rui Dias
-*
-*/
+
 Info_region Info;
 
 // Function to order each part of the array(partition) in the quicksort algorithm
