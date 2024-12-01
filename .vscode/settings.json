@@ -8,6 +8,7 @@
         "fcntl.h": "c",
         "my_stats.h": "c",
         "my_report.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "stdbool.h": "c"
     }
 }
