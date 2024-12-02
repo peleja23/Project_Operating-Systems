@@ -31,7 +31,6 @@ int view_regions(char *path, char *region_nr){
     int region = atoi(region_nr);
     int offSet = ((region - 1) * Info.registos * sizeof(int)) + (2 * sizeof(int));
     int bytes = lseek(fd, offSet, SEEK_SET);
-    printf("rmemoria:%d\n",bytes);
     int ola;
     for(int i = 0; i<Info.registos; i++){
         read(fd,&ola,sizeof(int));

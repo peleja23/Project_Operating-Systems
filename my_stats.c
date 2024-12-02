@@ -41,7 +41,7 @@ int write_in_file(){
     char output_file[50];
     construct_filename(output_file, reg_stats.region_id);
 
-    fd = open(output_file, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+    fd = open(output_file, O_WRONLY | O_CREAT, 0666);
     if (fd < 0) {
         perror("Failed to open file");
         return -1;
@@ -61,7 +61,7 @@ int get_stats(char *path, char *region_nr){
     int fd;
     int value;
     float average;
-    int BUF_SIZE = 256;
+    int BUF_SIZE = 20;
     int buf[BUF_SIZE];
     int values_read = 0;
     int bytes_read = 0;

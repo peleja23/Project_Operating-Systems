@@ -19,6 +19,7 @@ void construct_filename(char *buffer, int region_id) {
         buffer[i] = suffix[j];
     }
     buffer[i] = '\0';
+
 }
 
 int compare_stats(struct region_stats* all_regs, int nr_region){
