@@ -81,15 +81,15 @@ int *mySort(int fd, int region) {
             ordered = false;
         }
     } 
-    values_read = 0; 
     blockSize = 20;
+    values_read = (blockSize / 2); 
     buf = realloc(buf, blockSize * sizeof(int));
     if(ordered == false){
         for(int i = 0; i < nr_block - 1; i++){
             offSet = ((region - 1) * Info.records * sizeof(int)) + (2 * sizeof(int) + (i * blockSize * sizeof(int)) + ((blockSize / 2) * sizeof(int)));
             values_read = values_read + blockSize;
             if(values_read > Info.records){
-                blockSize = Info.records - values_read;
+                blockSize = blockSize - (values_read - Info.records);
                 buf = realloc(buf, blockSize * sizeof(int));
             } 
             read_block(fd, offSet, buf, blockSize);

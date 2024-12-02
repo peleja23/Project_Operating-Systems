@@ -88,7 +88,7 @@ int exec_stats(int nr_region, char* path){
     for(int i = 0; i < nr_region; i++){
         wait(&status);
         if(WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-            printf("stats worked with return value:%d\n", WEXITSTATUS(status));
+            //printf("stats worked with return value:%d\n", WEXITSTATUS(status));
         }
     }
     return 0;
