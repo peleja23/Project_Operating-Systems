@@ -61,7 +61,7 @@ int get_stats(char *path, char *region_nr){
     int fd;
     int value;
     float average;
-    int BUF_SIZE = 20;
+    int BUF_SIZE = 256;
     int buf[BUF_SIZE];
     int values_read = 0;
     int bytes_read = 0;
