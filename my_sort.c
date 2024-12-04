@@ -42,10 +42,12 @@ void quickSort(int *array, int low, int high) {
 }
 
 // Recursive function responsible for dividing in blocks and sorting all 
-int mySort(int fd, int region, int *buf, int blockSize) {
+int mySort(int fd, int region) {
+    int blockSize = 128;
     int values_read = 0;
     int nr_block = (Info.records + blockSize - 1) / blockSize;
     long offSet;
+    int *buf = malloc(blockSize * sizeof(int));
     int blocksize_init = blockSize;
     int matrix[nr_block][2];
     bool ordered;
@@ -109,8 +111,6 @@ int mySort(int fd, int region, int *buf, int blockSize) {
 }
 int sorter(char *path, int region) {
     int fd;
-    int blockSize = 20;
-    int *buf = malloc(blockSize * sizeof(int));
 
     fd = open(path, O_RDWR, 0666);
 
@@ -121,7 +121,7 @@ int sorter(char *path, int region) {
     }
 
     read(fd, &Info, sizeof(Info_region));
-    mySort(fd, region, buf, blockSize);
+    mySort(fd, region);
     close(fd);
 
     return 0;

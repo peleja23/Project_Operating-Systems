@@ -115,11 +115,13 @@ int read_stats(int nr_region){
             fd = open(output_file, O_RDONLY, 0666);
             if(fd < 0){
                 perror("open");
+                return 1;
             }
             close(pd[0]);
             int bytes_read = read(fd, &reg_stats, sizeof(region_stats));
             if(bytes_read < 0){
                 perror("read");
+                return 1;
             }
             close(fd);
             write(pd[1], &reg_stats, sizeof(region_stats));
