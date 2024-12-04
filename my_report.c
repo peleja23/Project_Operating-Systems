@@ -75,22 +75,28 @@ int compare_stats(struct region_stats* all_regs, int nr_region){
     return 0;
 }
 
-int exec_stats(int nr_region, char* path){
-    int status;
+int exec_stats(int nr_region, char* path, int max_processes){
     char value[4];
-    for(int i = 0; i < nr_region; i++){
-        if(fork() == 0) {
-            snprintf(value, sizeof(value), "%d", i+1);
-            execlp("./stats", "./stats", path, value, "-f", NULL);
-            perror("execlp");
-            _exit(1);
+    int counter_region = 0;
+    int counter_active = 0;
+    while(counter_region < nr_region){
+        while(counter_active < max_processes){
+            if(fork() == 0) {
+                snprintf(value, sizeof(value), "%d", counter_region +1);
+                execlp("./stats", "./stats", path, value, "-f", NULL);
+                perror("execlp");
+                _exit(1);
+            } 
+            counter_region ++;
+            counter_active ++;
+        }
+        if(counter_active > 0){ 
+            wait(NULL);
+            counter_active --;
         }
     }
-    for(int i = 0; i < nr_region; i++){
-        wait(&status);
-        if(WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-            //printf("stats worked with return value:%d\n", WEXITSTATUS(status));
-        }
+    for(int i = 0; i < counter_active; i++){
+        wait(NULL);
     }
     return 0;
 }
@@ -107,8 +113,15 @@ int read_stats(int nr_region){
             char output_file[50];        
             construct_filename(output_file, i+1);
             fd = open(output_file, O_RDONLY, 0666);
+            if(fd < 0){
+                perror("open");
+            }
             close(pd[0]);
-            read(fd, &reg_stats, sizeof(region_stats));
+            int bytes_read = read(fd, &reg_stats, sizeof(region_stats));
+            if(bytes_read < 0){
+                perror("read");
+            }
+            close(fd);
             write(pd[1], &reg_stats, sizeof(region_stats));
             close(pd[1]);
             _exit(0);

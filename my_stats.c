@@ -5,16 +5,13 @@ Info_region Info;
 region_stats reg_stats;
 
 int exec_sort(char *path, char *region_nr){
-    int status;
+
     if(fork() == 0){
         execlp("./sort", "./sort", path, region_nr, NULL);
         perror("execlp");
         _exit(1);    
     }
-    wait(&status);
-    if(WIFEXITED(status) && WEXITSTATUS(status) != 1){
-        return 0;
-    }
+    wait(NULL);
     return 1;
 }
 
@@ -41,12 +38,13 @@ int write_in_file(){
     char output_file[50];
     construct_filename(output_file, reg_stats.region_id);
 
-    fd = open(output_file, O_WRONLY | O_CREAT, 0666);
+    fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
         perror("Failed to open file");
         return -1;
     }
     write(fd, &reg_stats, sizeof(region_stats));
+    close(fd);
     return 0;
 }
 
@@ -61,7 +59,7 @@ int get_stats(char *path, char *region_nr){
     int fd;
     int value;
     float average;
-    int BUF_SIZE = 256;
+    int BUF_SIZE = 128;
     int buf[BUF_SIZE];
     int values_read = 0;
     int bytes_read = 0;
@@ -113,6 +111,7 @@ int get_stats(char *path, char *region_nr){
         read(fd, &value, sizeof(int));
         reg_stats.median = value;
     }
+    close(fd);
 
     return 0;
 }
