@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     int region;
     // Convert argv[2] to integer
     region = atoi(argv[2]);
-    
+    // Call sorter to sort the file
     sorter(argv[1], region);
 
     return 0;

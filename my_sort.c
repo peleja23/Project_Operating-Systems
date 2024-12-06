@@ -43,7 +43,7 @@ void quickSort(int *array, int low, int high) {
 
 //Function responsible for dividing in blocks and sorting each one
 int mySort(int fd, int region) {
-    int blockSize = 4096;
+    int blockSize = 1024;
     // Variable to help define the size of the last block 
     int values_read = 0;
     // Number of blocks needed for the given block size
