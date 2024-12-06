@@ -41,47 +41,61 @@ void quickSort(int *array, int low, int high) {
     }
 }
 
-// Recursive function responsible for dividing in blocks and sorting all 
+//Function responsible for dividing in blocks and sorting each one
 int mySort(int fd, int region) {
-    int blockSize = 128;
+    int blockSize = 4096;
+    // Variable to help define the size of the last block 
     int values_read = 0;
+    // Number of blocks needed for the given block size
     int nr_block = (Info.records + blockSize - 1) / blockSize;
     long offSet;
     int *buf = malloc(blockSize * sizeof(int));
+    // Variable to help reset the block size to its initial size
     int blocksize_init = blockSize;
+    // Matrix to save the first position and last position of each block
     int matrix[nr_block][2];
+    // Boolean to verifie if the whole file is ordered
     bool ordered;
 
     do {
         ordered = true;
         values_read = 0;
+        // Redefine the block size starting from the second iteration of the loop
         blockSize = blocksize_init;
+        // Reallocate the space in memory for the new block size
         buf = realloc(buf, blockSize * sizeof(int));
         for (int i = 0; i < nr_block; i++) {
+            // Define the offSet inside the file
             offSet = (2 * sizeof(int)) + ((region - 1) * Info.records * sizeof(int)) + (i * blockSize * sizeof(int));
+            // Ammount of value predicting to read after this iteration
             values_read += blockSize;
 
             if (values_read > Info.records) {
+                //Redifine the size of the new block
                 blockSize -= (values_read - Info.records);
                 buf = realloc(buf, blockSize * sizeof(int));
             }
-
+            // Move the file descriptor to its correct position 
             lseek(fd, offSet, SEEK_SET);
+            // Read the block from the file
             read(fd, buf, blockSize * sizeof(int));
+            // Sort the block with the quicksort algorithm
             quickSort(buf, 0, blockSize - 1);
+            // Save the first and last position of the block
             matrix[i][0] = buf[0];
             matrix[i][1] = buf[blockSize - 1];
             lseek(fd, offSet, SEEK_SET);
+            // Write the block to the file
             write(fd, buf, blockSize * sizeof(int));
         }
-
+        // Verifie if the block is ordered
         for (int i = 0; i < nr_block - 1; i++) {
             if (matrix[i][1] > matrix[i + 1][0]) {
                 ordered = false;
                 break;
             }
         }
-
+        // Same as abose but with one less block , and starting at the midle of the first block
         if (ordered== false) {
             blockSize = blocksize_init;
             values_read = blockSize / 2;
@@ -109,6 +123,7 @@ int mySort(int fd, int region) {
     free(buf);
     return 0;
 }
+
 int sorter(char *path, int region) {
     int fd;
 
@@ -119,8 +134,9 @@ int sorter(char *path, int region) {
         perror("Failed to open file");
         return -1;
     }
-
+    // Read the header from the file
     read(fd, &Info, sizeof(Info_region));
+    // Start sorting the file
     mySort(fd, region);
     close(fd);
 

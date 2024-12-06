@@ -4,8 +4,56 @@
 Info_region Info;
 region_stats reg_stats;
 
-int exec_sort(char *path, char *region_nr){
+// Function to create the right name for the temporary file
+void construct_filename(char *buffer, int region_id) {
+    // Prefix for the file path to inside the right folder
+    const char *prefix = "./regions_stats/region-";
+    int i;
+    // Copy the prefix into the buffer
+    for (i = 0; prefix[i] != '\0'; i++) {
+        buffer[i] = prefix[i];
+    }
+    // Append the three-digit region ID to the buffer
+    buffer[i++] = '0' + (region_id / 100) % 10;
+    buffer[i++] = '0' + (region_id / 10) % 10;
+    buffer[i++] = '0' + region_id % 10;
 
+    // Append the suffix to the buffer
+    const char *suffix = "-stats.bin";
+    for (int j = 0; suffix[j] != '\0'; j++, i++) {
+        buffer[i] = suffix[j];
+    }
+    buffer[i] = '\0';
+}
+
+// Function to write the stats struck to the respective file
+int write_in_file(){
+    int fd;
+    char output_file[50];
+
+    //Build the string to open the correct file 
+    construct_filename(output_file, reg_stats.region_id);
+    fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (fd < 0) {
+        perror("Failed to open file");
+        return -1;
+    }
+    // Write the struct to the file
+    write(fd, &reg_stats, sizeof(region_stats));
+    close(fd);
+    return 0;
+}
+
+// Function to write the stats struck to the Stdout
+int write_in_stdout(){
+    write(1, &reg_stats, sizeof(region_stats));
+    return 0;
+    
+}
+
+// Function to execute the sort program 
+int exec_sort(char *path, char *region_nr){
+    // Create a child process to execute sort
     if(fork() == 0){
         execlp("./sort", "./sort", path, region_nr, NULL);
         perror("execlp");
@@ -14,51 +62,12 @@ int exec_sort(char *path, char *region_nr){
     wait(NULL);
     return 1;
 }
-
-void construct_filename(char *buffer, int region_id) {
-    const char *prefix = "./regions_stats/region-";
-    int i;
-    for (i = 0; prefix[i] != '\0'; i++) {
-        buffer[i] = prefix[i];
-    }
-
-    buffer[i++] = '0' + (region_id / 100) % 10;
-    buffer[i++] = '0' + (region_id / 10) % 10;
-    buffer[i++] = '0' + region_id % 10;
-
-    const char *suffix = "-stats.bin";
-    for (int j = 0; suffix[j] != '\0'; j++, i++) {
-        buffer[i] = suffix[j];
-    }
-    buffer[i] = '\0';
-}
-
-int write_in_file(){
-    int fd;
-    char output_file[50];
-    construct_filename(output_file, reg_stats.region_id);
-
-    fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    if (fd < 0) {
-        perror("Failed to open file");
-        return -1;
-    }
-    write(fd, &reg_stats, sizeof(region_stats));
-    close(fd);
-    return 0;
-}
-
-int write_in_stdout(){
-
-    write(1, &reg_stats, sizeof(region_stats));
-    return 0;
-    
-}
-
+// Function to calculate the stats
 int get_stats(char *path, char *region_nr){
     int fd;
     int value;
     float average;
+    // Amount of ints to read from the file
     int BUF_SIZE = 128;
     int buf[BUF_SIZE];
     int values_read = 0;
@@ -73,19 +82,26 @@ int get_stats(char *path, char *region_nr){
         perror("Failed to open file");
         return -1;
     }
+    // Read the header of the file
     read(fd, &Info, sizeof(Info_region));
-
+    // Positions inside the file to later do lseek
     int min_position = (2 + (reg_stats.region_id - 1) * Info.records) * sizeof(int);
     int mid_position = min_position + (((Info.records/2) - 1) * sizeof(int)); 
-    
     lseek(fd, min_position, SEEK_SET);
+
+    // Loop to read integer records from the file and process statistics
     while(values_read < Info.records){
+        // Calculate how many records to read in this iteration
         to_read =  Info.records - values_read;
+        // Limit the number of records to read to the buffer size (BUF_SIZE)
         if (to_read > BUF_SIZE){
             to_read = BUF_SIZE;
         }
+        // Read a chunk of integers from the file into the buffer
         bytes_read = read (fd, &buf, to_read * sizeof(int));
+        // Update the ammount of values read
         values_read = values_read + (bytes_read/sizeof(int));
+        // Cicle to calculate the average, minimum and maximum values
         for(int i = 0; i<to_read; i++){
             value = buf[i];
             if( counter == 0 ){
@@ -94,19 +110,24 @@ int get_stats(char *path, char *region_nr){
                 reg_stats.max = value;
             }
             average = average + value;
+            // Counter to help getting the minimum and maximum values
             counter ++;
         }
     }
-
+    // Calculate the average value
     reg_stats.average = (float)(average / Info.records);
-    
+
+    // Set the file offset to the midpoint to calculate the median
     lseek(fd, mid_position, SEEK_SET);
+
+    // Check if the number of records is even
     if((Info.records % 2) == 0){
         int value1;
         read(fd, &value, sizeof(int));
         read(fd, &value1, sizeof(int));
         reg_stats.median = (value + value1)/2;
     }else{
+        // Skip one integer forward to reach the middle for odd records
         lseek(fd, sizeof(int), SEEK_CUR);
         read(fd, &value, sizeof(int));
         reg_stats.median = value;
