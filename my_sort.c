@@ -60,7 +60,6 @@ int mySort(int fd, int region) {
     do {
         ordered = true;
         values_read = 0;
-        // Redefine the block size starting from the second iteration of the loop
         blockSize = blocksize_init;
         // Reallocate the space in memory for the new block size
         buf = realloc(buf, blockSize * sizeof(int));
@@ -95,7 +94,7 @@ int mySort(int fd, int region) {
                 break;
             }
         }
-        // Same as abose but with one less block , and starting at the midle of the first block
+        // Same as abose but with one less block , and starting at the middle of the first block above
         if (ordered== false) {
             blockSize = blocksize_init;
             values_read = blockSize / 2;
