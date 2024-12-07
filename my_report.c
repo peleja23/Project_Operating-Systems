@@ -4,25 +4,8 @@
 region_stats reg_stats;
 
 // Function to create the right name for the temporary file
-void construct_filename(char *buffer, int region_id) {
-    // Prefix for the file path to inside the right folder
-    const char *prefix = "./regions_stats/region-";
-    int i;
-    // Copy the prefix into the buffer
-    for (i = 0; prefix[i] != '\0'; i++) {
-        buffer[i] = prefix[i];
-    }
-    // Append the three-digit region ID to the buffer
-    buffer[i++] = '0' + (region_id / 100) % 10;
-    buffer[i++] = '0' + (region_id / 10) % 10;
-    buffer[i++] = '0' + region_id % 10;
-
-    // Append the suffix to the buffer
-    const char *suffix = "-stats.bin";
-    for (int j = 0; suffix[j] != '\0'; j++, i++) {
-        buffer[i] = suffix[j];
-    }
-    buffer[i] = '\0';
+void construct_filename(char *buffer, int buffer_size, int region_id) {
+    snprintf(buffer, buffer_size, "./regions_stats/region-%03d-stats.bin", region_id);
 }
 
 // Function to compare and print stats for all the regions
@@ -128,7 +111,7 @@ int read_stats(int nr_region){
             int fd;
             char output_file[50];
             // Construct the file name for the current region      
-            construct_filename(output_file, i+1);
+            construct_filename(output_file, 50, i+1);
             fd = open(output_file, O_RDONLY, 0666);
             if(fd < 0){
                 perror("open");

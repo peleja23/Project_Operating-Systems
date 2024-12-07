@@ -5,25 +5,8 @@ Info_region Info;
 region_stats reg_stats;
 
 // Function to create the right name for the temporary file
-void construct_filename(char *buffer, int region_id) {
-    // Prefix for the file path to inside the right folder
-    const char *prefix = "./regions_stats/region-";
-    int i;
-    // Copy the prefix into the buffer
-    for (i = 0; prefix[i] != '\0'; i++) {
-        buffer[i] = prefix[i];
-    }
-    // Append the three-digit region ID to the buffer
-    buffer[i++] = '0' + (region_id / 100) % 10;
-    buffer[i++] = '0' + (region_id / 10) % 10;
-    buffer[i++] = '0' + region_id % 10;
-
-    // Append the suffix to the buffer
-    const char *suffix = "-stats.bin";
-    for (int j = 0; suffix[j] != '\0'; j++, i++) {
-        buffer[i] = suffix[j];
-    }
-    buffer[i] = '\0';
+void construct_filename(char *buffer, int buffer_size, int region_id) {
+    snprintf(buffer, buffer_size, "./regions_stats/region-%03d-stats.bin", region_id);
 }
 
 // Function to write the stats struck to the respective file
@@ -32,7 +15,7 @@ int write_in_file(){
     char output_file[50];
 
     //Build the string to open the correct file 
-    construct_filename(output_file, reg_stats.region_id);
+    construct_filename(output_file, 50, reg_stats.region_id);
     fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
         perror("Failed to open file");
